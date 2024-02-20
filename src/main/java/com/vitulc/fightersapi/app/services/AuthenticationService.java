@@ -80,9 +80,7 @@ public class AuthenticationService {
     }
 
     public Users getCurrentUser(){
-
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
         return userRepository.findByUsername(authentication.getName())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
     }

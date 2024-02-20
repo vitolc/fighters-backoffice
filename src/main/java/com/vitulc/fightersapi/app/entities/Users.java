@@ -24,9 +24,6 @@ public class Users implements Serializable {
 
     private String password;
 
-    @OneToMany(mappedBy = "user")
-    private Set<Category> categories;
-
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Fighter> fighters = new ArrayList<>();
 
@@ -85,12 +82,11 @@ public class Users implements Serializable {
         this.fighters = fighters;
     }
 
-    public Set<Category> getCategories() {
-        return categories;
+    public Set<CategoryGroup> getCategoryGroup() {
+        return categoryGroup;
     }
 
-    public void setCategories(Set<Category> categories) {
-        this.categories = categories;
+    public void setCategoryGroup(Set<CategoryGroup> categoryGroup) {
+        this.categoryGroup = categoryGroup;
     }
-
 }
