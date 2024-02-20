@@ -2,7 +2,6 @@ package com.vitulc.fightersapi.app.services;
 
 import com.vitulc.fightersapi.app.dtos.CategoryGroupDto;
 import com.vitulc.fightersapi.app.entities.CategoryGroup;
-import com.vitulc.fightersapi.app.entities.Users;
 import com.vitulc.fightersapi.app.dtos.CategoryDto;
 import com.vitulc.fightersapi.app.entities.Category;
 import com.vitulc.fightersapi.app.errors.exceptions.BadRequestException;
@@ -14,7 +13,6 @@ import org.springframework.stereotype.Service;
 
 
 import java.util.List;
-import java.util.Optional;
 
 
 @Service
@@ -45,15 +43,27 @@ public class CategoryService {
 
         var category = new Category(categoryDto);
         category.setCategoryGroup(categoryGroup);
-        category.setUser(authenticationService.getCurrentUser());
 
         categoryRepository.save(category);
         return ResponseEntity.ok("Category created successfully");
     }
 
     @Transactional
-    public List<Category> getCategoriesByUserAndGroup(Users user, CategoryGroup categoryGroup) {
-        return categoryRepository.findByUserOrUserIsNullAndCategoryGroup(user, categoryGroup);
+    public ResponseEntity<String> createCategoryGroup(CategoryGroupDto categoryGroupDto){
+
+        if (categoryGroupRepository.findByUserOrUserIsNullAndName(authenticationService.getCurrentUser(),
+                categoryGroupDto.categoryGroupName()).isPresent()) {
+            throw new BadRequestException(String.format("You already have a category group with name: %s",  categoryGroupDto.categoryGroupName()));
+        }
+
+        var categoryGroup = new CategoryGroup(categoryGroupDto);
+        categoryGroup.setUser(authenticationService.getCurrentUser());
+        categoryGroupRepository.save(categoryGroup);
+        return ResponseEntity.ok(String.format("Category group (%s) created successfully", categoryGroupDto.categoryGroupName()));
+    }
+
+    public List<Category> getCategoriesByGroup(CategoryGroup categoryGroup) {
+        return categoryRepository.findByCategoryGroup(categoryGroup);
     }
 
     public Category getCategoryByWeight(List<Category> categories, float weight) {
@@ -66,16 +76,4 @@ public class CategoryService {
         throw new BadRequestException("There is no category for this weight in the category group provided");
     }
 
-    public ResponseEntity<String> createCategoryGroup(CategoryGroupDto categoryGroupDto){
-
-        if (categoryGroupRepository.findByUserOrUserIsNullAndName(
-                authenticationService.getCurrentUser(),
-                categoryGroupDto.categoryGroupName()).isPresent()) {
-            throw new BadRequestException(String.format("You already have a category group with name: %s",  categoryGroupDto.categoryGroupName()));
-        }
-        var categoryGroup = new CategoryGroup(categoryGroupDto);
-        categoryGroup.setUser(authenticationService.getCurrentUser());
-        categoryGroupRepository.save(categoryGroup);
-        return ResponseEntity.ok(String.format("Category group [%s] created successfully", categoryGroupDto.categoryGroupName()));
-    }
 }

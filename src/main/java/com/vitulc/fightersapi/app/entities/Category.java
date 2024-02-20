@@ -4,12 +4,14 @@ import com.vitulc.fightersapi.app.dtos.CategoryDto;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 @Entity
 @Table(uniqueConstraints =
-@UniqueConstraint(columnNames = {"category_name", "user_id", "category_group_id"})
+@UniqueConstraint(columnNames = {"category_name", "category_group_id"})
 )
 public class Category {
 
@@ -23,14 +25,6 @@ public class Category {
 
     @ManyToOne
     private CategoryGroup categoryGroup;
-
-    @OneToMany(mappedBy = "category")
-    private List<Fighter> fighters = new ArrayList<>();
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private Users user;
-
 
     public Category(CategoryDto categoryDto){
         this.minWeight = categoryDto.minWeight();
@@ -80,22 +74,6 @@ public class Category {
 
     public void setGroup(CategoryGroup categoryGroup) {
         this.categoryGroup = categoryGroup;
-    }
-
-    public List<Fighter> getFighters() {
-        return fighters;
-    }
-
-    public void setFighters(List<Fighter> fighters) {
-        this.fighters = fighters;
-    }
-
-    public Users getUser() {
-        return user;
-    }
-
-    public void setUser(Users user) {
-        this.user = user;
     }
 
     public CategoryGroup getCategoryGroup() {

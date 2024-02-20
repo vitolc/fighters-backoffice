@@ -2,13 +2,13 @@ package com.vitulc.fightersapi.app.controllers;
 
 import com.vitulc.fightersapi.app.dtos.CategoryDto;
 import com.vitulc.fightersapi.app.dtos.CategoryGroupDto;
+import com.vitulc.fightersapi.app.entities.CategoryGroup;
 import com.vitulc.fightersapi.app.services.CategoryService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/category")

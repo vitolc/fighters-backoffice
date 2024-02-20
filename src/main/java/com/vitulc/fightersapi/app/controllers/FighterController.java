@@ -22,9 +22,10 @@ public class FighterController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<String> create(@RequestBody @Valid FighterDto fighterDto){
+    public ResponseEntity<String> create(@RequestBody @Valid FighterDto fighterDto) {
         return fighterService.create(fighterDto);
     }
+
     @GetMapping("/list")
     public ResponseEntity<List<FighterResponseDto>> getFighters() {
         return fighterService.getFighters();

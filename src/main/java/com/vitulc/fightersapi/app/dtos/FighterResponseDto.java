@@ -7,8 +7,7 @@ public record FighterResponseDto(
         String name,
         String nickname,
         int age,
-        Float weight,
-        String category) {
+        Float weight) {
 
     public FighterResponseDto(Fighter fighter) {
         this(
@@ -16,7 +15,6 @@ public record FighterResponseDto(
                 fighter.getName(),
                 fighter.getNickname(),
                 fighter.getAge(),
-                fighter.getWeight(),
-                fighter.getCategory().getCategoryName());
+                fighter.getWeight());
     }
 }

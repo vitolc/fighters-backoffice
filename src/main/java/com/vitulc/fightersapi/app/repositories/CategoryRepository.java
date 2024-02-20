@@ -10,6 +10,6 @@ import java.util.List;
 
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {
-    List<Category> findByUserOrUserIsNullAndCategoryGroup(Users user, CategoryGroup categoryGroup);
+    List<Category> findByCategoryGroup(CategoryGroup categoryGroup);
     Category findByCategoryNameAndCategoryGroup(String categoryName, CategoryGroup categoryGroup);
 }

@@ -3,6 +3,9 @@ package com.vitulc.fightersapi.app.entities;
 import com.vitulc.fightersapi.app.dtos.FighterDto;
 import jakarta.persistence.*;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Entity
 public class Fighter {
 
@@ -17,11 +20,9 @@ public class Fighter {
     private String nickname;
 
     private int age;
+
     private Float weight;
 
-    @ManyToOne
-    @JoinColumn(name = "category_id", nullable = false)
-    private Category category;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
@@ -94,13 +95,4 @@ public class Fighter {
     public void setUser(Users user) {
         this.user = user;
     }
-
-    public Category getCategory() {
-        return category;
-    }
-
-    public void setCategory(Category category) {
-        this.category = category;
-    }
-
 }
