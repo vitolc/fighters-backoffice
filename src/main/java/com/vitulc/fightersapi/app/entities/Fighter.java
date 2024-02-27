@@ -3,9 +3,6 @@ package com.vitulc.fightersapi.app.entities;
 import com.vitulc.fightersapi.app.dtos.FighterDto;
 import jakarta.persistence.*;
 
-import java.util.HashSet;
-import java.util.Set;
-
 @Entity
 public class Fighter {
 
@@ -22,7 +19,6 @@ public class Fighter {
     private int age;
 
     private Float weight;
-
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)

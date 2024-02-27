@@ -4,7 +4,9 @@ import com.vitulc.fightersapi.app.dtos.CategoryGroupDto;
 import com.vitulc.fightersapi.app.entities.CategoryGroup;
 import com.vitulc.fightersapi.app.dtos.CategoryDto;
 import com.vitulc.fightersapi.app.entities.Category;
+import com.vitulc.fightersapi.app.entities.Users;
 import com.vitulc.fightersapi.app.errors.exceptions.BadRequestException;
+import com.vitulc.fightersapi.app.errors.exceptions.NotFoundException;
 import com.vitulc.fightersapi.app.repositories.CategoryGroupRepository;
 import com.vitulc.fightersapi.app.repositories.CategoryRepository;
 import jakarta.transaction.Transactional;
@@ -75,5 +77,11 @@ public class CategoryService {
         }
         throw new BadRequestException("There is no category for this weight in the category group provided");
     }
+
+    public Category getByIdAndCategoryGroupUser(Long id, Users user) {
+        return categoryRepository.findByIdAndCategoryGroupUser(id, user)
+                .orElseThrow(() -> new NotFoundException("Category not found"));
+    }
+
 
 }

@@ -1,5 +1,6 @@
 package com.vitulc.fightersapi.app.entities;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.vitulc.fightersapi.app.dtos.UserDto;
 import jakarta.persistence.*;
 import java.io.Serial;
@@ -29,6 +30,15 @@ public class Users implements Serializable {
 
     @OneToMany(mappedBy = "user")
     private Set<CategoryGroup> categoryGroup;
+
+    @OneToMany(mappedBy = "user")
+    private List<Fight> fights = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user")
+    private List<FightInfo> fightsInfo = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user")
+    private List<Tournament> tournaments = new ArrayList<>();
 
 
     public Users(UserDto userDto, String encryptPassword) {
@@ -88,5 +98,29 @@ public class Users implements Serializable {
 
     public void setCategoryGroup(Set<CategoryGroup> categoryGroup) {
         this.categoryGroup = categoryGroup;
+    }
+
+    public List<Fight> getFights() {
+        return fights;
+    }
+
+    public void setFights(List<Fight> fights) {
+        this.fights = fights;
+    }
+
+    public List<Tournament> getTournaments() {
+        return tournaments;
+    }
+
+    public void setTournaments(List<Tournament> tournaments) {
+        this.tournaments = tournaments;
+    }
+
+    public List<FightInfo> getFightsInfo() {
+        return fightsInfo;
+    }
+
+    public void setFightsInfo(List<FightInfo> fightsInfo) {
+        this.fightsInfo = fightsInfo;
     }
 }

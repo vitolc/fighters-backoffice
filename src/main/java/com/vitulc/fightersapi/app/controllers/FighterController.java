@@ -33,7 +33,7 @@ public class FighterController {
 
     @GetMapping("/{document}")
     public ResponseEntity<FighterResponseDto> getFighterByDocument(@PathVariable String document) {
-        return fighterService.getFighterById(document);
+        return fighterService.getFighterByDocument(document);
     }
 
     @PutMapping("/{document}")
