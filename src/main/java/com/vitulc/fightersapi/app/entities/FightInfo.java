@@ -32,6 +32,7 @@ public class FightInfo {
     private String categoryName;
     private String tournamentName;
     private String winnerName;
+    private String winnerDocument;
     private LocalDateTime date;
 
     public FightInfo(Fighter fighterOne, Fighter fighterTwo) {
@@ -46,6 +47,7 @@ public class FightInfo {
         this.fighterTwoAge = fighterTwo.getAge();
         this.fighterTwoNickname = fighterTwo.getNickname();
         this.fighterTwoWeight = fighterTwo.getWeight();
+
     }
 
     public FightInfo() {
@@ -178,6 +180,14 @@ public class FightInfo {
 
     public void setWinnerName(String winnerName) {
         this.winnerName = winnerName;
+    }
+
+    public String getWinnerDocument() {
+        return winnerDocument;
+    }
+
+    public void setWinnerDocument(String winnerDocument) {
+        this.winnerDocument = winnerDocument;
     }
 
     public LocalDateTime getDate() {

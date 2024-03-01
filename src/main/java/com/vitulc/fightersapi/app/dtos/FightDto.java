@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 
 public record FightDto(@NotBlank(message = "The fighter's document is necessary to register him for the fight") String FighterOneDocument,
                        @NotBlank(message = "The fighter's document is necessary to register him for the fight") String FighterTwoDocument,
-                       Long categoryId,
+                       Long categoryGroupId,
                        Long tournamentId,
                        String date){
 }

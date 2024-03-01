@@ -1,14 +1,35 @@
 package com.vitulc.fightersapi.app.dtos;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.vitulc.fightersapi.app.entities.FightInfo;
 
-public record FightsHistoryDto(Long fightId, String fighterOne, String fighterTwo, String winner){
+import java.time.LocalDateTime;
 
-    public FightsHistoryDto(FightInfo fightInfo){
+public record FightsHistoryDto(Long fightId, FighterResponseDto fighterOne, FighterResponseDto fighterTwo,
+                               String categoryName, String tournamentName,
+                               @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "UTC") LocalDateTime date,
+                               String winnerName, String winnerDocument ) {
 
-        this(   fightInfo.getFightId(),
-                fightInfo.getFighterOneName(),
-                fightInfo.getFighterTwoName(),
-                fightInfo.getWinnerName());
+    public FightsHistoryDto(FightInfo fightInfo) {
+        this(fightInfo.getFightId(),
+                FighterResponseDto.of(
+                        fightInfo.getFighterOneDocument(),
+                        fightInfo.getFighterOneName(),
+                        fightInfo.getFighterOneNickname(),
+                        fightInfo.getFighterOneAge(),
+                        fightInfo.getFighterOneWeight()),
+
+                FighterResponseDto.of(
+                        fightInfo.getFighterTwoDocument(),
+                        fightInfo.getFighterTwoName(),
+                        fightInfo.getFighterTwoNickname(),
+                        fightInfo.getFighterTwoAge(),
+                        fightInfo.getFighterTwoWeight()),
+
+                fightInfo.getCategoryName(),
+                fightInfo.getTournamentName(),
+                fightInfo.getDate(),
+                fightInfo.getWinnerName(),
+                fightInfo.getWinnerDocument());
     }
 }

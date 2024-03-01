@@ -24,6 +24,8 @@ public class Fighter {
     @JoinColumn(name = "user_id", nullable = false)
     private Users user;
 
+    private Boolean isDeleted = false;
+
     public Fighter(FighterDto fighterDto) {
         this.document = fighterDto.document();
         this.name = fighterDto.name();
@@ -90,5 +92,13 @@ public class Fighter {
 
     public void setUser(Users user) {
         this.user = user;
+    }
+
+    public Boolean getDeleted() {
+        return isDeleted;
+    }
+
+    public void setDeleted(Boolean deleted) {
+        isDeleted = deleted;
     }
 }

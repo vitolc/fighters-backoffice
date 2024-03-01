@@ -42,13 +42,13 @@ public class FighterService {
     }
 
     public ResponseEntity<List<FighterResponseDto>> getFighters() {
-        List<FighterResponseDto> fightersList = authenticationService.getCurrentUser().getFighters()
+        List<FighterResponseDto> fightersList = fighterRepository.findByUserAndIsDeletedFalse(authenticationService.getCurrentUser())
                 .stream().map(FighterResponseDto::new).toList();
         return ResponseEntity.ok(fightersList);
     }
 
     public ResponseEntity<FighterResponseDto> getFighterByDocument(String document) {
-        Fighter fighter = fighterRepository.findByUserAndDocument(authenticationService.getCurrentUser(), document)
+        Fighter fighter = fighterRepository.findByUserAndDocumentAndIsDeletedFalse(authenticationService.getCurrentUser(), document)
                 .orElseThrow(() -> new NotFoundException("Fighter not found"));
 
         FighterResponseDto fighterResponseDto = new FighterResponseDto(fighter);
@@ -57,7 +57,7 @@ public class FighterService {
 
     public ResponseEntity<String> updateFighter(String document, UpdateFighterDto updateFighterDto){
 
-        Fighter fighter = fighterRepository.findByUserAndDocument(authenticationService.getCurrentUser(), document)
+        Fighter fighter = fighterRepository.findByUserAndDocumentAndIsDeletedFalse(authenticationService.getCurrentUser(), document)
                 .orElseThrow(() -> new NotFoundException("Fighter not found"));
 
         fighter.setName(updateFighterDto.name());
@@ -70,10 +70,21 @@ public class FighterService {
     }
 
     public ResponseEntity<String> deleteFighter(String document) {
+        Fighter fighter = fighterRepository.findByUserAndDocumentAndIsDeletedFalse(authenticationService.getCurrentUser(), document)
+                .orElseThrow(() -> new NotFoundException("Fighter not found"));
+
+        fighter.setDeleted(true);
+        fighterRepository.save(fighter);
+        return ResponseEntity.ok("Fighter deleted successfully");
+    }
+
+    public ResponseEntity<String> restoreFighter(String document) {
         Fighter fighter = fighterRepository.findByUserAndDocument(authenticationService.getCurrentUser(), document)
                 .orElseThrow(() -> new NotFoundException("Fighter not found"));
 
-        fighterRepository.delete(fighter);
-        return ResponseEntity.ok("Fighter deleted successfully");
+        fighter.setDeleted(false);
+        fighterRepository.save(fighter);
+        return ResponseEntity.ok("Fighter restored successfully");
     }
+
 }

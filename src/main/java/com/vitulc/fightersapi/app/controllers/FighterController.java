@@ -45,4 +45,9 @@ public class FighterController {
     public ResponseEntity<String> deleteFighter(@PathVariable String document) {
         return fighterService.deleteFighter(document);
     }
+
+    @PutMapping("/{document}/restore")
+    public ResponseEntity<String> restoreFighter(@PathVariable String document) {
+        return fighterService.restoreFighter(document);
+    }
 }

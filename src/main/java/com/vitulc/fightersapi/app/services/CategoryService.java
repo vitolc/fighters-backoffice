@@ -1,9 +1,11 @@
 package com.vitulc.fightersapi.app.services;
 
 import com.vitulc.fightersapi.app.dtos.CategoryGroupDto;
+import com.vitulc.fightersapi.app.dtos.FightDto;
 import com.vitulc.fightersapi.app.entities.CategoryGroup;
 import com.vitulc.fightersapi.app.dtos.CategoryDto;
 import com.vitulc.fightersapi.app.entities.Category;
+import com.vitulc.fightersapi.app.entities.Fighter;
 import com.vitulc.fightersapi.app.entities.Users;
 import com.vitulc.fightersapi.app.errors.exceptions.BadRequestException;
 import com.vitulc.fightersapi.app.errors.exceptions.NotFoundException;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -34,6 +37,7 @@ public class CategoryService {
         this.categoryGroupRepository = categoryGroupRepository;
     }
 
+    @Transactional
     public ResponseEntity<String> createCategory(CategoryDto categoryDto) {
 
         var categoryGroup = categoryGroupRepository.findByUserAndName(authenticationService.getCurrentUser(), categoryDto.categoryGroup())
@@ -50,38 +54,25 @@ public class CategoryService {
         return ResponseEntity.ok("Category created successfully");
     }
 
-    @Transactional
-    public ResponseEntity<String> createCategoryGroup(CategoryGroupDto categoryGroupDto){
-
-        if (categoryGroupRepository.findByUserOrUserIsNullAndName(authenticationService.getCurrentUser(),
-                categoryGroupDto.categoryGroupName()).isPresent()) {
-            throw new BadRequestException(String.format("You already have a category group with name: %s",  categoryGroupDto.categoryGroupName()));
-        }
-
-        var categoryGroup = new CategoryGroup(categoryGroupDto);
-        categoryGroup.setUser(authenticationService.getCurrentUser());
-        categoryGroupRepository.save(categoryGroup);
-        return ResponseEntity.ok(String.format("Category group (%s) created successfully", categoryGroupDto.categoryGroupName()));
-    }
-
-    public List<Category> getCategoriesByGroup(CategoryGroup categoryGroup) {
-        return categoryRepository.findByCategoryGroup(categoryGroup);
-    }
-
-    public Category getCategoryByWeight(List<Category> categories, float weight) {
-
-        for (Category category : categories) {
-            if (category.getMinWeight() <= weight && weight <= category.getMaxWeight()) {
-                return category;
-            }
-        }
-        throw new BadRequestException("There is no category for this weight in the category group provided");
-    }
-
     public Category getByIdAndCategoryGroupUser(Long id, Users user) {
-        return categoryRepository.findByIdAndCategoryGroupUser(id, user)
+        return categoryRepository.findByIdAndCategoryGroupUserOrNull(id, user)
                 .orElseThrow(() -> new NotFoundException("Category not found"));
     }
 
+    Category validateCategory(FightDto fightDto, Fighter fighterOne, Fighter fighterTwo) {
+        if (fightDto.categoryGroupId() == null) return null;
+
+        Category category = getByIdAndCategoryGroupUser(fightDto.categoryGroupId(), authenticationService.getCurrentUser());
+
+        if (fighterOne.getWeight() < category.getMinWeight() || fighterOne.getWeight() > category.getMaxWeight()) {
+            throw new BadRequestException("Fighter one weight is not within the category limits");
+        }
+
+        if (fighterTwo.getWeight() < category.getMinWeight() || fighterTwo.getWeight() > category.getMaxWeight()) {
+            throw new BadRequestException("Fighter two weight is not within the category limits");
+        }
+
+        return category;
+    }
 
 }

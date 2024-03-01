@@ -17,4 +17,8 @@ public record FighterResponseDto(
                 fighter.getAge(),
                 fighter.getWeight());
     }
+
+    public static FighterResponseDto of( String document, String name, String nickname,int age,  Float weight) {
+        return new FighterResponseDto(document, name, nickname, age, weight);
+    }
 }

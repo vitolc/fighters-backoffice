@@ -8,12 +8,16 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.lang.Nullable;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface CategoryGroupRepository extends JpaRepository<CategoryGroup, Long> {
+
     @Query("SELECT c FROM CategoryGroup c WHERE (c.user = :user OR c.user IS NULL) AND c.name = :name")
     Optional<CategoryGroup> findByUserOrUserIsNullAndName(@Param("user") Users user, @Param("name") String name);
 
     Optional<CategoryGroup> findByUserAndName(@Param("user") Users user, @Param("name") String name);
+
+    List<CategoryGroup> findByUserOrUserIsNull(Users user);
 }
 

@@ -27,17 +27,15 @@ public class Fight {
     @JoinColumn(name = "winner_id")
     Fighter winner;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = true)
-    @JoinColumn(name = "category_id", nullable = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
     private Category category;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = true)
-    @JoinColumn(name = "tournament_id", nullable = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tournament_id")
     Tournament tournament;
 
-    @Column(nullable = true)
     private LocalDateTime date;
-
 
     public Fight(Fighter fighterOne, Fighter fighterTwo, Category category, LocalDateTime date, Tournament tournament) {
         this.fighterOne = fighterOne;

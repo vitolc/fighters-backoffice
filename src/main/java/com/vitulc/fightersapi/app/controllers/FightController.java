@@ -36,10 +36,10 @@ public class FightController {
     }
 
 
-//    @GetMapping("/history/fighters")
-//    public List<FightsHistoryDto> getFightHistoryByFighters(
-//            @RequestParam( "fighterOneDocument") String fighterOneDocument,
-//            @RequestParam("fighterTwoDocument") String fighterTwoDocument) {
-//        return fightService.getFightHistoryByFighters(fighterOneDocument, fighterTwoDocument);
-//    }
+    @GetMapping("/history/fighters")
+    public ResponseEntity<List<FightsHistoryDto>> getFightHistoryByFighters(
+            @RequestParam( "fighterOneDocument") String fighterOneDocument,
+            @RequestParam("fighterTwoDocument") String fighterTwoDocument) {
+        return fightService.getAllFightsBetweenTwoFighters(fighterOneDocument, fighterTwoDocument);
+    }
 }

@@ -11,11 +11,11 @@ import com.vitulc.fightersapi.app.repositories.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static com.vitulc.fightersapi.app.services.DateTimeService.parseDate;
 
 @Service
 public class FightService {
@@ -24,89 +24,57 @@ public class FightService {
     private final AuthenticationService authenticationService;
     private final FightRepository fightRepository;
     private final CategoryService categoryService;
-    private final TournamentRepository tournamentRepository;
     private final FightInfoRepository fightInfoRepository;
+    private final TournamentService tournamentService;
+    private final FighterService fighterService;
 
     public FightService(
             FighterRepository fighterRepository,
             AuthenticationService authenticationService,
             FightRepository fightRepository,
             CategoryService categoryService,
-            TournamentRepository tournamentRepository,
-            FightInfoRepository fightInfoRepository) {
+            FightInfoRepository fightInfoRepository,
+            TournamentService tournamentService,
+            FighterService fighterService) {
 
         this.fighterRepository = fighterRepository;
         this.authenticationService = authenticationService;
         this.fightRepository = fightRepository;
         this.categoryService = categoryService;
-        this.tournamentRepository = tournamentRepository;
         this.fightInfoRepository = fightInfoRepository;
+        this.tournamentService = tournamentService;
+        this.fighterService = fighterService;
     }
 
     public ResponseEntity<String> create(FightDto fightDto) {
 
-        var fighterOne = fighterRepository.findByUserAndDocument(authenticationService.getCurrentUser(), fightDto.FighterOneDocument())
+        var fighterOne = fighterRepository.findByUserAndDocumentAndIsDeletedFalse(authenticationService.getCurrentUser(), fightDto.FighterOneDocument())
                 .orElseThrow(() -> new NotFoundException("Fighter one not found"));
 
-        var fighterTwo = fighterRepository.findByUserAndDocument(authenticationService.getCurrentUser(), fightDto.FighterTwoDocument())
+        var fighterTwo = fighterRepository.findByUserAndDocumentAndIsDeletedFalse(authenticationService.getCurrentUser(), fightDto.FighterTwoDocument())
                 .orElseThrow(() -> new NotFoundException("Fighter two not found"));
 
         if (fightDto.FighterOneDocument().equals(fightDto.FighterTwoDocument())) {
             throw new BadRequestException("Fighters cannot be the same");
         }
 
-        Category category = null;
-
-        if (fightDto.categoryId() != null) {
-            category = categoryService.getByIdAndCategoryGroupUser(fightDto.categoryId(), authenticationService.getCurrentUser());
-
-            if (fighterOne.getWeight() < category.getMinWeight() || fighterOne.getWeight() > category.getMaxWeight()) {
-                throw new BadRequestException("Fighter one weight is not within the category limits");
-            }
-
-            if (fighterTwo.getWeight() < category.getMinWeight() || fighterTwo.getWeight() > category.getMaxWeight()) {
-                throw new BadRequestException("Fighter two weight is not within the category limits");
-            }
-        }
-
-        Tournament tournament = null;
-
-        if (fightDto.tournamentId() != null) {
-            tournament = tournamentRepository.findByUserAndId(authenticationService.getCurrentUser(), fightDto.tournamentId())
-                    .orElseThrow(() -> new NotFoundException("Tournament not found"));
-
-            List<Fighter> tournamentFighters = tournament.getFighters();
-
-            if (!tournamentFighters.contains(fighterOne) || !tournamentFighters.contains(fighterTwo)) {
-                throw new BadRequestException("Both fighters should be part of the tournament");
-            }
-        }
-
-        LocalDateTime dateTime = null;
-
-        if (fightDto.date() != null) {
-            try {
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/M/yyyy H:m");
-                dateTime = LocalDateTime.parse(fightDto.date(), formatter);
-            } catch (DateTimeParseException e) {
-                throw new BadRequestException("The date provided is not valid. a correct format, for example, would be '23/3/2023 14:30'");
-            }
-        }
+        var category = categoryService.validateCategory(fightDto, fighterOne, fighterTwo);
+        var tournament = tournamentService.validateTournament(fightDto, fighterOne, fighterTwo);
+        var dateTime = parseDate(fightDto.date());
 
         var fight = new Fight(fighterOne, fighterTwo, category, dateTime, tournament);
-
         fight.setUser(authenticationService.getCurrentUser());
         fightRepository.save(fight);
         saveFightInHistory(fight);
         return ResponseEntity.ok("Fight created successfully");
     }
 
-    public ResponseEntity<String> setWinnerFighter(FightWinnerDto fightWinnerDto)  {
+    public ResponseEntity<String> setWinnerFighter(FightWinnerDto fightWinnerDto) {
 
         Fight fight = fightRepository.findByIdAndUser(fightWinnerDto.fightId(), authenticationService.getCurrentUser())
                 .orElseThrow(() -> new NotFoundException("Fight not found"));
 
-        var winnerFighter = fighterRepository.findByUserAndDocument(authenticationService.getCurrentUser(), fightWinnerDto.document())
+        var winnerFighter = fighterRepository.findByUserAndDocumentAndIsDeletedFalse(authenticationService.getCurrentUser(), fightWinnerDto.document())
                 .orElseThrow(() -> new NotFoundException("There is no fighter with this document"));
 
         if (!fight.getFighterOne().getDocument().equals(winnerFighter.getDocument()) && !fight.getFighterTwo().getDocument().equals(winnerFighter.getDocument())) {
@@ -122,6 +90,7 @@ public class FightService {
         fight.setWinner(winnerFighter);
         fightRepository.save(fight);
         fightInfo.setWinnerName(winnerFighter.getName());
+        fightInfo.setWinnerDocument(winnerFighter.getDocument());
         fightInfoRepository.save(fightInfo);
         return ResponseEntity.ok("Winner fighter set successfully");
     }
@@ -131,22 +100,48 @@ public class FightService {
         List<FightInfo> fightInfos = fightInfoRepository.findFightHistoryByUserOrderByIdDesc(authenticationService.getCurrentUser())
                 .orElseThrow(() -> new NotFoundException("There are no fights to list"));
 
+        if(fightInfos.isEmpty()){
+            throw new NotFoundException("There are no fights to list");
+        }
+
         List<FightsHistoryDto> fightsHistoryDto = fightInfos.stream()
                 .map(FightsHistoryDto::new)
                 .collect(Collectors.toList());
 
-        if (fightsHistoryDto.isEmpty()) {
+        return ResponseEntity.ok(fightsHistoryDto);
+    }
+
+    public ResponseEntity<List<FightsHistoryDto>> getAllFightsBetweenTwoFighters(String fighterOneDocument, String fighterTwoDocument) {
+
+        fighterRepository.findByUserAndDocumentAndIsDeletedFalse(authenticationService.getCurrentUser(), fighterOneDocument)
+                .orElseThrow(() -> new NotFoundException("Fighter one not found"));
+
+        fighterRepository.findByUserAndDocumentAndIsDeletedFalse(authenticationService.getCurrentUser(), fighterTwoDocument)
+                .orElseThrow(() -> new NotFoundException("Fighter two not found"));
+
+        List<FightInfo> fightInfos = fightInfoRepository.findAllByFighterOneDocumentAndFighterTwoDocument(fighterOneDocument, fighterTwoDocument)
+                .orElseThrow(() -> new NotFoundException("these fighters have never faced each other"));
+
+        if(fightInfos.isEmpty()){
             throw new NotFoundException("There are no fights to list");
         }
+
+        List<FightsHistoryDto> fightsHistoryDto = fightInfos.stream()
+                .map(FightsHistoryDto::new)
+                .collect(Collectors.toList());
 
         return ResponseEntity.ok(fightsHistoryDto);
     }
 
-    public void saveFightInHistory(Fight fight){
+    public void saveFightInHistory(Fight fight) {
         FightInfo fightInfo = new FightInfo(fight.getFighterOne(), fight.getFighterTwo());
         fightInfo.setUser(authenticationService.getCurrentUser());
         fightInfo.setFightId(fight.getId());
+        fightInfo.setCategoryName(fight.getCategory().getCategoryName());
+        fightInfo.setTournamentName(fight.getTournament().getName());
+        fightInfo.setDate(fight.getDate());
         fightInfoRepository.save(fightInfo);
     }
+
 
 }
