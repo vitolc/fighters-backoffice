@@ -3,6 +3,7 @@ package com.vitulc.fightersapi.app.services;
 import com.vitulc.fightersapi.app.dtos.*;
 import com.vitulc.fightersapi.app.entities.Users;
 import com.vitulc.fightersapi.app.entities.Fighter;
+import com.vitulc.fightersapi.app.errors.exceptions.BadRequestException;
 import com.vitulc.fightersapi.app.errors.exceptions.ConflictException;
 import com.vitulc.fightersapi.app.errors.exceptions.NotFoundException;
 import com.vitulc.fightersapi.app.repositories.CategoryGroupRepository;
@@ -70,7 +71,7 @@ public class FighterService {
     }
 
     public ResponseEntity<String> deleteFighter(String document) {
-        Fighter fighter = fighterRepository.findByUserAndDocumentAndIsDeletedFalse(authenticationService.getCurrentUser(), document)
+        var fighter = fighterRepository.findByUserAndDocumentAndIsDeletedFalse(authenticationService.getCurrentUser(), document)
                 .orElseThrow(() -> new NotFoundException("Fighter not found"));
 
         fighter.setDeleted(true);
@@ -81,6 +82,10 @@ public class FighterService {
     public ResponseEntity<String> restoreFighter(String document) {
         Fighter fighter = fighterRepository.findByUserAndDocument(authenticationService.getCurrentUser(), document)
                 .orElseThrow(() -> new NotFoundException("Fighter not found"));
+
+        if (!fighter.getDeleted()){
+            throw new BadRequestException("The fighter was not excluded");
+        }
 
         fighter.setDeleted(false);
         fighterRepository.save(fighter);

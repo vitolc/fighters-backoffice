@@ -36,6 +36,11 @@ public class TournamentService {
     }
 
     public ResponseEntity<String> create(TournamentDto tournamentDto) {
+
+        if (tournamentRepository.findByUserAndName(authenticationService.getCurrentUser(), tournamentDto.tournamentName()).isPresent()) {
+            throw new BadRequestException("Tournament with the same name already exists");
+        }
+
         var tournament = new Tournament(tournamentDto);
         tournament.setUser(authenticationService.getCurrentUser());
         tournamentRepository.save(tournament);
@@ -79,9 +84,7 @@ public class TournamentService {
 
     public ResponseEntity<TournamentDetailsDto> getTournamentDetails(String tournamentName) {
         var tournament = getTournament(tournamentName);
-        var tournamentDetails = createTournamentDetailsDto(tournament);
-
-        return ResponseEntity.ok(tournamentDetails);
+        return ResponseEntity.ok(createTournamentDetailsDto(tournament));
     }
 
     public ResponseEntity<List<TournamentResponseDto>> getTournaments() {
@@ -92,6 +95,14 @@ public class TournamentService {
                 .map(TournamentResponseDto::new)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(tournamentList);
+    }
+
+    public ResponseEntity<List<FighterResponseDto>> getAllFightersInTournament(String tournamentName){
+        return ResponseEntity.ok(getAllFightersByTournament(tournamentName));
+    }
+
+    public ResponseEntity<List<FightsHistoryDto>> getAllFightsInTournament(String tournamentName){
+        return ResponseEntity.ok(getAllFightsByTournament(tournamentName));
     }
 
     public Tournament validateTournament(FightDto fightDto, Fighter fighterOne, Fighter fighterTwo) {
@@ -128,16 +139,13 @@ public class TournamentService {
         List<FightInfo> fightInfos = fightInfoRepository.findFightHistoryByUserAndTournamentNameOrderByIdDesc(authenticationService.getCurrentUser(), tournamentName)
                 .orElseThrow(() -> new NotFoundException("There are no fights to list"));
 
-        if(fightInfos.isEmpty()){
-            throw new NotFoundException("There are no fights to list");
-        }
-
         return fightInfos.stream()
                 .map(FightsHistoryDto::new)
                 .collect(Collectors.toList());
     }
 
     public TournamentDetailsDto createTournamentDetailsDto(Tournament tournament) {
+
         String tournamentWinnerName = null;
         String tournamentWinnerDocument = null;
 
@@ -154,6 +162,5 @@ public class TournamentService {
                 tournamentWinnerName,
                 tournamentWinnerDocument);
     }
-
 
 }

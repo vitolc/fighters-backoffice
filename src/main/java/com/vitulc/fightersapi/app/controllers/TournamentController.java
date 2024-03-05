@@ -43,4 +43,14 @@ public class TournamentController {
     public ResponseEntity<TournamentDetailsDto> getTournamentDetails(@RequestParam("tournamentName") String tournamentName) {
         return tournamentService.getTournamentDetails(tournamentName);
     }
+
+    @GetMapping("/details/fighters")
+    public ResponseEntity<List<FighterResponseDto>> getTournamentFighters(@RequestParam("tournamentName") String tournamentName) {
+        return tournamentService.getAllFightersInTournament(tournamentName);
+    }
+
+    @GetMapping("/details/fights")
+    public ResponseEntity<List<FightsHistoryDto>> getTournamentFights(@RequestParam("tournamentName") String tournamentName) {
+        return tournamentService.getAllFightsInTournament(tournamentName);
+    }
 }

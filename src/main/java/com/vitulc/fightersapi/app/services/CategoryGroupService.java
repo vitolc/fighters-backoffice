@@ -6,6 +6,7 @@ import com.vitulc.fightersapi.app.dtos.CategoryGroupResponseDto;
 import com.vitulc.fightersapi.app.entities.Category;
 import com.vitulc.fightersapi.app.entities.CategoryGroup;
 import com.vitulc.fightersapi.app.errors.exceptions.BadRequestException;
+import com.vitulc.fightersapi.app.errors.exceptions.NotFoundException;
 import com.vitulc.fightersapi.app.repositories.CategoryGroupRepository;
 import com.vitulc.fightersapi.app.repositories.CategoryRepository;
 import jakarta.transaction.Transactional;
@@ -43,10 +44,10 @@ public class CategoryGroupService {
         var categoryGroup = new CategoryGroup(categoryGroupDto);
         categoryGroup.setUser(authenticationService.getCurrentUser());
         categoryGroupRepository.save(categoryGroup);
-        return ResponseEntity.ok(String.format("Category group (%s) created successfully", categoryGroupDto.categoryGroupName()));
+        return ResponseEntity.ok("Category group created successfully");
     }
 
-    public ResponseEntity<List<CategoryGroupResponseDto>> getCategoryGroups() {
+    public ResponseEntity<List<CategoryGroupResponseDto>> getCategoryGroups(){
 
         List<CategoryGroup> categoryGroups = categoryGroupRepository.findByUserOrUserIsNull(authenticationService.getCurrentUser());
 
@@ -59,6 +60,10 @@ public class CategoryGroupService {
     public ResponseEntity<List<CategoryDto>> getAllCategoriesByGroup(String categoryGroupName) {
 
         List<Category> categories = categoryRepository.findByCategoryGroupNameAndCategoryGroupUser(categoryGroupName, authenticationService.getCurrentUser());
+
+        if (categories.isEmpty()) {
+            throw new NotFoundException("No categories found for the specified category group");
+        }
 
         List<CategoryDto> categoryList = categories.stream()
                 .map(category -> new CategoryDto(

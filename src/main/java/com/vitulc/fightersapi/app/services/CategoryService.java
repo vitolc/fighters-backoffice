@@ -1,8 +1,6 @@
 package com.vitulc.fightersapi.app.services;
 
-import com.vitulc.fightersapi.app.dtos.CategoryGroupDto;
 import com.vitulc.fightersapi.app.dtos.FightDto;
-import com.vitulc.fightersapi.app.entities.CategoryGroup;
 import com.vitulc.fightersapi.app.dtos.CategoryDto;
 import com.vitulc.fightersapi.app.entities.Category;
 import com.vitulc.fightersapi.app.entities.Fighter;
@@ -14,10 +12,6 @@ import com.vitulc.fightersapi.app.repositories.CategoryRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 
 @Service

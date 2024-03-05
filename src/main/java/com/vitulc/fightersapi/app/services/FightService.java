@@ -11,6 +11,7 @@ import com.vitulc.fightersapi.app.repositories.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -26,7 +27,6 @@ public class FightService {
     private final CategoryService categoryService;
     private final FightInfoRepository fightInfoRepository;
     private final TournamentService tournamentService;
-    private final FighterService fighterService;
 
     public FightService(
             FighterRepository fighterRepository,
@@ -34,8 +34,7 @@ public class FightService {
             FightRepository fightRepository,
             CategoryService categoryService,
             FightInfoRepository fightInfoRepository,
-            TournamentService tournamentService,
-            FighterService fighterService) {
+            TournamentService tournamentService) {
 
         this.fighterRepository = fighterRepository;
         this.authenticationService = authenticationService;
@@ -43,7 +42,6 @@ public class FightService {
         this.categoryService = categoryService;
         this.fightInfoRepository = fightInfoRepository;
         this.tournamentService = tournamentService;
-        this.fighterService = fighterService;
     }
 
     public ResponseEntity<String> create(FightDto fightDto) {
@@ -74,7 +72,7 @@ public class FightService {
         Fight fight = fightRepository.findByIdAndUser(fightWinnerDto.fightId(), authenticationService.getCurrentUser())
                 .orElseThrow(() -> new NotFoundException("Fight not found"));
 
-        var winnerFighter = fighterRepository.findByUserAndDocumentAndIsDeletedFalse(authenticationService.getCurrentUser(), fightWinnerDto.document())
+        var winnerFighter = fighterRepository.findByUserAndDocument(authenticationService.getCurrentUser(), fightWinnerDto.document())
                 .orElseThrow(() -> new NotFoundException("There is no fighter with this document"));
 
         if (!fight.getFighterOne().getDocument().equals(winnerFighter.getDocument()) && !fight.getFighterTwo().getDocument().equals(winnerFighter.getDocument())) {
@@ -113,10 +111,10 @@ public class FightService {
 
     public ResponseEntity<List<FightsHistoryDto>> getAllFightsBetweenTwoFighters(String fighterOneDocument, String fighterTwoDocument) {
 
-        fighterRepository.findByUserAndDocumentAndIsDeletedFalse(authenticationService.getCurrentUser(), fighterOneDocument)
+        fighterRepository.findByUserAndDocument(authenticationService.getCurrentUser(), fighterOneDocument)
                 .orElseThrow(() -> new NotFoundException("Fighter one not found"));
 
-        fighterRepository.findByUserAndDocumentAndIsDeletedFalse(authenticationService.getCurrentUser(), fighterTwoDocument)
+        fighterRepository.findByUserAndDocument(authenticationService.getCurrentUser(), fighterTwoDocument)
                 .orElseThrow(() -> new NotFoundException("Fighter two not found"));
 
         List<FightInfo> fightInfos = fightInfoRepository.findAllByFighterOneDocumentAndFighterTwoDocument(fighterOneDocument, fighterTwoDocument)
@@ -137,9 +135,31 @@ public class FightService {
         FightInfo fightInfo = new FightInfo(fight.getFighterOne(), fight.getFighterTwo());
         fightInfo.setUser(authenticationService.getCurrentUser());
         fightInfo.setFightId(fight.getId());
-        fightInfo.setCategoryName(fight.getCategory().getCategoryName());
-        fightInfo.setTournamentName(fight.getTournament().getName());
-        fightInfo.setDate(fight.getDate());
+
+        String categoryName = null;
+
+        if (fight.getCategory() != null){
+            categoryName = fight.getCategory().getCategoryName();
+        }
+
+        fightInfo.setCategoryName(categoryName);
+
+        String tournamentName = null;
+
+        if (fight.getTournament() != null){
+            tournamentName = fight.getTournament().getName();
+        }
+
+        fightInfo.setTournamentName(tournamentName);
+
+        LocalDateTime date = null;
+
+        if (fight.getDate() != null){
+            date = fight.getDate();
+        }
+
+        fightInfo.setDate(date);
+
         fightInfoRepository.save(fightInfo);
     }
 

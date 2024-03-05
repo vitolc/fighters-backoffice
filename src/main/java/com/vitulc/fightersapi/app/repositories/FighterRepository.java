@@ -10,6 +10,7 @@ import java.util.Optional;
 public interface FighterRepository extends JpaRepository<Fighter, Long> {
     boolean existsByUserAndDocumentIgnoreCase(Users user, String document);
     Optional<Fighter> findByUserAndDocumentAndIsDeletedFalse(Users user, String document);
+    Optional<Fighter> findByUserAndDocumentAndIsDeletedTrue(Users user, String document);
     List<Fighter> findByUserAndIsDeletedFalse(Users user);
     Optional<Fighter> findByUserAndDocument(Users users, String document);
 }

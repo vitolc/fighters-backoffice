@@ -9,6 +9,7 @@ import java.time.format.DateTimeParseException;
 
 @Service
 public class DateTimeService {
+
     static public LocalDateTime parseDate(String date) {
         if (date == null) return null;
 
