@@ -1,38 +1,35 @@
 package com.vitulc.fightersapi.app.services;
 
 import com.vitulc.fightersapi.app.dtos.*;
-import com.vitulc.fightersapi.app.entities.Category;
-import com.vitulc.fightersapi.app.entities.CategoryGroup;
 import com.vitulc.fightersapi.app.entities.Users;
 import com.vitulc.fightersapi.app.entities.Fighter;
+import com.vitulc.fightersapi.app.errors.exceptions.BadRequestException;
 import com.vitulc.fightersapi.app.errors.exceptions.ConflictException;
 import com.vitulc.fightersapi.app.errors.exceptions.NotFoundException;
-import com.vitulc.fightersapi.app.repositories.CategoryGroupRepository;
 import com.vitulc.fightersapi.app.repositories.FighterRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class FighterService {
 
     private final FighterRepository fighterRepository;
-    private final CategoryService categoryService;
     private final AuthenticationService authenticationService;
-    private final CategoryGroupRepository categoryGroupRepository;
+    private final UploadImageService uploadImageService;
 
     public FighterService(
             FighterRepository fighterRepository,
-            CategoryService categoryService,
             AuthenticationService authenticationService,
-            CategoryGroupRepository categoryGroupRepository) {
+            UploadImageService uploadImageService) {
 
         this.fighterRepository = fighterRepository;
-        this.categoryService = categoryService;
         this.authenticationService = authenticationService;
-        this.categoryGroupRepository = categoryGroupRepository;
+        this.uploadImageService = uploadImageService;
     }
 
     public ResponseEntity<String> create(FighterDto fighterDto) {
@@ -49,14 +46,31 @@ public class FighterService {
         return ResponseEntity.status(HttpStatus.CREATED).body("Fighter created successfully");
     }
 
+    public ResponseEntity<String> setFighterImage(String document, MultipartFile image){
+
+        var fighter = fighterRepository.findByUserAndDocumentAndIsDeletedFalse(authenticationService.getCurrentUser(), document)
+                .orElseThrow(() -> new NotFoundException("Fighter not found"));
+
+        String imageUrl = uploadImageService.uploadImage(image);
+
+        if (image.isEmpty()) {
+            throw new BadRequestException("Image file is required");
+        }
+
+        fighter.setPicture(imageUrl);
+        fighterRepository.save(fighter);
+
+        return ResponseEntity.ok( "Fighter photo added successfully");
+    }
+
     public ResponseEntity<List<FighterResponseDto>> getFighters() {
-        List<FighterResponseDto> fightersList = authenticationService.getCurrentUser().getFighters()
+        List<FighterResponseDto> fightersList = fighterRepository.findByUserAndIsDeletedFalse(authenticationService.getCurrentUser())
                 .stream().map(FighterResponseDto::new).toList();
         return ResponseEntity.ok(fightersList);
     }
 
-    public ResponseEntity<FighterResponseDto> getFighterById(String document) {
-        Fighter fighter = fighterRepository.findByUserAndDocumentIgnoreCase(authenticationService.getCurrentUser(), document)
+    public ResponseEntity<FighterResponseDto> getFighterByDocument(String document) {
+        Fighter fighter = fighterRepository.findByUserAndDocumentAndIsDeletedFalse(authenticationService.getCurrentUser(), document)
                 .orElseThrow(() -> new NotFoundException("Fighter not found"));
 
         FighterResponseDto fighterResponseDto = new FighterResponseDto(fighter);
@@ -65,23 +79,52 @@ public class FighterService {
 
     public ResponseEntity<String> updateFighter(String document, UpdateFighterDto updateFighterDto){
 
-        Fighter fighter = fighterRepository.findByUserAndDocumentIgnoreCase(authenticationService.getCurrentUser(), document)
+        var fighter = fighterRepository.findByUserAndDocumentAndIsDeletedFalse(authenticationService.getCurrentUser(), document)
                 .orElseThrow(() -> new NotFoundException("Fighter not found"));
 
-        fighter.setName(updateFighterDto.name());
-        fighter.setNickname(updateFighterDto.nickname());
-        fighter.setAge(updateFighterDto.age());
-        fighter.setWeight(updateFighterDto.weight());
+        if (updateFighterDto.weight() == null
+                && updateFighterDto.name() == null
+                && updateFighterDto.nickname() == null
+                && updateFighterDto.age() == null){
+            throw new BadRequestException("Update request contains no fields to update");
+        }
+
+        Optional.ofNullable(updateFighterDto.name())
+                .ifPresent(fighter::setName);
+
+        Optional.ofNullable(updateFighterDto.nickname())
+                .ifPresent(fighter::setNickname);
+
+        Optional.of(updateFighterDto.age())
+                .ifPresent(fighter::setAge);
+
+        Optional.ofNullable(updateFighterDto.weight())
+                .ifPresent(fighter::setWeight);
 
         fighterRepository.save(fighter);
         return ResponseEntity.ok("Fighter updated successfully");
     }
 
     public ResponseEntity<String> deleteFighter(String document) {
-        Fighter fighter = fighterRepository.findByUserAndDocumentIgnoreCase(authenticationService.getCurrentUser(), document)
+        var fighter = fighterRepository.findByUserAndDocumentAndIsDeletedFalse(authenticationService.getCurrentUser(), document)
                 .orElseThrow(() -> new NotFoundException("Fighter not found"));
 
-        fighterRepository.delete(fighter);
+        fighter.setDeleted(true);
+        fighterRepository.save(fighter);
         return ResponseEntity.ok("Fighter deleted successfully");
     }
+
+    public ResponseEntity<String> restoreFighter(String document) {
+        Fighter fighter = fighterRepository.findByUserAndDocument(authenticationService.getCurrentUser(), document)
+                .orElseThrow(() -> new NotFoundException("Fighter not found"));
+
+        if (!fighter.getDeleted()){
+            throw new BadRequestException("The fighter was not excluded");
+        }
+
+        fighter.setDeleted(false);
+        fighterRepository.save(fighter);
+        return ResponseEntity.ok("Fighter restored successfully");
+    }
+
 }

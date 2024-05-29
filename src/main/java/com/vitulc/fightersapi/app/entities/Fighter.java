@@ -3,9 +3,6 @@ package com.vitulc.fightersapi.app.entities;
 import com.vitulc.fightersapi.app.dtos.FighterDto;
 import jakarta.persistence.*;
 
-import java.util.HashSet;
-import java.util.Set;
-
 @Entity
 public class Fighter {
 
@@ -23,10 +20,13 @@ public class Fighter {
 
     private Float weight;
 
-
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private Users user;
+
+    private Boolean isDeleted = false;
+
+    private String picture;
 
     public Fighter(FighterDto fighterDto) {
         this.document = fighterDto.document();
@@ -94,5 +94,21 @@ public class Fighter {
 
     public void setUser(Users user) {
         this.user = user;
+    }
+
+    public Boolean getDeleted() {
+        return isDeleted;
+    }
+
+    public void setDeleted(Boolean deleted) {
+        isDeleted = deleted;
+    }
+
+    public String getPicture() {
+        return picture;
+    }
+
+    public void setPicture(String picture) {
+        this.picture = picture;
     }
 }

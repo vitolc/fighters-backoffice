@@ -30,9 +30,19 @@ public class Users implements Serializable {
     @OneToMany(mappedBy = "user")
     private Set<CategoryGroup> categoryGroup;
 
+    @OneToMany(mappedBy = "user")
+    private List<Fight> fights = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user")
+    private List<FightInfo> fightsInfo = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user")
+    private List<Tournament> tournaments = new ArrayList<>();
+
+    private String profileImageUrl;
+
 
     public Users(UserDto userDto, String encryptPassword) {
-
         this.email = userDto.email();
         this.password = encryptPassword;
         this.username = userDto.username();
@@ -88,5 +98,37 @@ public class Users implements Serializable {
 
     public void setCategoryGroup(Set<CategoryGroup> categoryGroup) {
         this.categoryGroup = categoryGroup;
+    }
+
+    public List<Fight> getFights() {
+        return fights;
+    }
+
+    public void setFights(List<Fight> fights) {
+        this.fights = fights;
+    }
+
+    public List<Tournament> getTournaments() {
+        return tournaments;
+    }
+
+    public void setTournaments(List<Tournament> tournaments) {
+        this.tournaments = tournaments;
+    }
+
+    public List<FightInfo> getFightsInfo() {
+        return fightsInfo;
+    }
+
+    public void setFightsInfo(List<FightInfo> fightsInfo) {
+        this.fightsInfo = fightsInfo;
+    }
+
+    public String getProfileImageUrl() {
+        return profileImageUrl;
+    }
+
+    public void setProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
     }
 }
