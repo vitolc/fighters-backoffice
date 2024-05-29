@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 public record FightsHistoryDto(Long fightId, FighterResponseDto fighterOne, FighterResponseDto fighterTwo,
                                String categoryName, String tournamentName,
-                               @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss", timezone = "UTC") LocalDateTime date,
+                               @JsonFormat(pattern = "dd-MM-yyyy'T'HH:mm:ss'Z'", timezone = "UTC") LocalDateTime date,
                                String winnerName, String winnerDocument ) {
 
     public FightsHistoryDto(FightInfo fightInfo) {

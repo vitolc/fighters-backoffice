@@ -19,4 +19,5 @@ public interface FightInfoRepository extends JpaRepository<FightInfo, Long> {
     Optional<List<FightInfo>> findAllByFighterOneDocumentAndFighterTwoDocument(String fighterOneDocument, String fighterTwoDocument);
 
     Optional<FightInfo> findByFightId(Long id);
+
 }

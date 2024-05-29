@@ -7,6 +7,7 @@ import com.vitulc.fightersapi.app.dtos.FighterResponseDto;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -49,5 +50,10 @@ public class FighterController {
     @PutMapping("/{document}/restore")
     public ResponseEntity<String> restoreFighter(@PathVariable String document) {
         return fighterService.restoreFighter(document);
+    }
+
+    @PostMapping("/{document}/image")
+    public ResponseEntity<String> setFighterImage(@PathVariable String document, @RequestParam("image") MultipartFile image) {
+        return fighterService.setFighterImage(document, image);
     }
 }

@@ -1,6 +1,5 @@
 package com.vitulc.fightersapi.app.entities;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.vitulc.fightersapi.app.dtos.UserDto;
 import jakarta.persistence.*;
 import java.io.Serial;
@@ -40,9 +39,10 @@ public class Users implements Serializable {
     @OneToMany(mappedBy = "user")
     private List<Tournament> tournaments = new ArrayList<>();
 
+    private String profileImageUrl;
+
 
     public Users(UserDto userDto, String encryptPassword) {
-
         this.email = userDto.email();
         this.password = encryptPassword;
         this.username = userDto.username();
@@ -122,5 +122,13 @@ public class Users implements Serializable {
 
     public void setFightsInfo(List<FightInfo> fightsInfo) {
         this.fightsInfo = fightsInfo;
+    }
+
+    public String getProfileImageUrl() {
+        return profileImageUrl;
+    }
+
+    public void setProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
     }
 }

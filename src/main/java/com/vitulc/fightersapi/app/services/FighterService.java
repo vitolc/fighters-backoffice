@@ -6,26 +6,30 @@ import com.vitulc.fightersapi.app.entities.Fighter;
 import com.vitulc.fightersapi.app.errors.exceptions.BadRequestException;
 import com.vitulc.fightersapi.app.errors.exceptions.ConflictException;
 import com.vitulc.fightersapi.app.errors.exceptions.NotFoundException;
-import com.vitulc.fightersapi.app.repositories.CategoryGroupRepository;
 import com.vitulc.fightersapi.app.repositories.FighterRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class FighterService {
 
     private final FighterRepository fighterRepository;
     private final AuthenticationService authenticationService;
+    private final UploadImageService uploadImageService;
 
     public FighterService(
             FighterRepository fighterRepository,
-            AuthenticationService authenticationService) {
+            AuthenticationService authenticationService,
+            UploadImageService uploadImageService) {
 
         this.fighterRepository = fighterRepository;
         this.authenticationService = authenticationService;
+        this.uploadImageService = uploadImageService;
     }
 
     public ResponseEntity<String> create(FighterDto fighterDto) {
@@ -40,6 +44,23 @@ public class FighterService {
         newFighter.setUser(currentUser);
         fighterRepository.save(newFighter);
         return ResponseEntity.status(HttpStatus.CREATED).body("Fighter created successfully");
+    }
+
+    public ResponseEntity<String> setFighterImage(String document, MultipartFile image){
+
+        var fighter = fighterRepository.findByUserAndDocumentAndIsDeletedFalse(authenticationService.getCurrentUser(), document)
+                .orElseThrow(() -> new NotFoundException("Fighter not found"));
+
+        String imageUrl = uploadImageService.uploadImage(image);
+
+        if (image.isEmpty()) {
+            throw new BadRequestException("Image file is required");
+        }
+
+        fighter.setPicture(imageUrl);
+        fighterRepository.save(fighter);
+
+        return ResponseEntity.ok( "Fighter photo added successfully");
     }
 
     public ResponseEntity<List<FighterResponseDto>> getFighters() {
@@ -58,13 +79,27 @@ public class FighterService {
 
     public ResponseEntity<String> updateFighter(String document, UpdateFighterDto updateFighterDto){
 
-        Fighter fighter = fighterRepository.findByUserAndDocumentAndIsDeletedFalse(authenticationService.getCurrentUser(), document)
+        var fighter = fighterRepository.findByUserAndDocumentAndIsDeletedFalse(authenticationService.getCurrentUser(), document)
                 .orElseThrow(() -> new NotFoundException("Fighter not found"));
 
-        fighter.setName(updateFighterDto.name());
-        fighter.setNickname(updateFighterDto.nickname());
-        fighter.setAge(updateFighterDto.age());
-        fighter.setWeight(updateFighterDto.weight());
+        if (updateFighterDto.weight() == null
+                && updateFighterDto.name() == null
+                && updateFighterDto.nickname() == null
+                && updateFighterDto.age() == null){
+            throw new BadRequestException("Update request contains no fields to update");
+        }
+
+        Optional.ofNullable(updateFighterDto.name())
+                .ifPresent(fighter::setName);
+
+        Optional.ofNullable(updateFighterDto.nickname())
+                .ifPresent(fighter::setNickname);
+
+        Optional.of(updateFighterDto.age())
+                .ifPresent(fighter::setAge);
+
+        Optional.ofNullable(updateFighterDto.weight())
+                .ifPresent(fighter::setWeight);
 
         fighterRepository.save(fighter);
         return ResponseEntity.ok("Fighter updated successfully");

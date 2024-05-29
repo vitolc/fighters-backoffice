@@ -14,10 +14,9 @@ public class DateTimeService {
         if (date == null) return null;
 
         try {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/M/yyyy H:m");
-            return LocalDateTime.parse(date, formatter);
+            return LocalDateTime.parse(date, DateTimeFormatter.ISO_DATE_TIME);
         } catch (DateTimeParseException e) {
-            throw new BadRequestException("The date provided is not valid. a correct format, for example, would be '23/3/2023 14:30'");
+            throw new BadRequestException("The date provided is not valid. a correct format, for example, would be '2023-03-23T14:30:00Z'");
         }
     }
 }

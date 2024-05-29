@@ -26,6 +26,8 @@ public class Fighter {
 
     private Boolean isDeleted = false;
 
+    private String picture;
+
     public Fighter(FighterDto fighterDto) {
         this.document = fighterDto.document();
         this.name = fighterDto.name();
@@ -100,5 +102,13 @@ public class Fighter {
 
     public void setDeleted(Boolean deleted) {
         isDeleted = deleted;
+    }
+
+    public String getPicture() {
+        return picture;
+    }
+
+    public void setPicture(String picture) {
+        this.picture = picture;
     }
 }
